@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"^const pillarDetails\\\\|^];$\\\\|^export default function PillarsSection\" /Users/rajat/Downloads/krm-nextjs-dev/src/components/diseases/PillarsSection.tsx)",
+      "Bash(npx tsc *)",
+      "Bash(node --experimental-strip-types src/lib/runSetup.ts)",
+      "Bash(npx --yes tsx src/lib/runSetup.ts)",
+      "Bash(curl -s -o /dev/null -w \"kidney-failure page: %{http_code}\\\\n\" http://localhost:3000/kidney-failure)",
+      "Bash(curl -s -o /dev/null -w \"admin pillars page: %{http_code}\\\\n\" http://localhost:3000/admin/pillars)",
+      "Bash(curl -s http://localhost:3000/kidney-failure)",
+      "Bash(curl -s -D - -o /dev/null http://localhost:3000/admin/pillars)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(npm run *)",
+      "Bash(grep -n \"Seeded \\\\${initialPillars.length} pillars\" -A 3 /Users/rajat/Downloads/krm-nextjs-dev/src/lib/dbSetup.ts)",
+      "Bash(zip -r sticky-booking-form.zip sticky-booking-form -x \".*\")",
+      "Bash(zip -r sticky-booking-form-php.zip sticky-booking-form-php -x \".*\")",
+      "Bash(unzip -l sticky-booking-form-php.zip)",
+      "Bash(npx --yes tsx .tmp-scripts/seed-kidney-treatments.ts)",
+      "Bash(npx --yes tsx .tmp-scripts/seed-new-diseases.ts)"
+    ]
+  }
+}
