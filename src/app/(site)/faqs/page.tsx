@@ -2,13 +2,18 @@ import React from 'react';
 import { Metadata } from 'next';
 import FaqAccordion from '@/components/faqs/FaqAccordion';
 import PageBanner from '@/components/ui/PageBanner';
+import { getSiteFaqsAction } from '@/app/actions/siteFaqActions';
 
 export const metadata: Metadata = {
   title: 'FAQs | Karma Ayurveda',
   description: 'Find answers to frequently asked questions about Karma Ayurveda, our treatments, kidney diseases, and more.',
 };
 
-export default function FaqsPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function FaqsPage() {
+  const faqs = await getSiteFaqsAction();
+
   return (
     <main className="flex flex-col min-h-screen">
       
@@ -23,7 +28,7 @@ export default function FaqsPage() {
       />
 
       {/* Accordion Section */}
-      <FaqAccordion />
+      <FaqAccordion faqs={faqs} />
 
     </main>
   );

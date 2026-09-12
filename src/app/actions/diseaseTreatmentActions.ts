@@ -224,3 +224,133 @@ export async function deleteDiseaseTreatmentAction(id: number | string) {
     return { success: false, error: 'Failed to delete treatment sub-page from database.' };
   }
 }
+
+// ==========================================
+// Bulk Import
+// ==========================================
+
+const slugify = (text: string) =>
+  text.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
+
+// Unlike locations (which always store a bare last-segment slug), treatment pages can
+// intentionally live under a category prefix stored right in the slug itself — e.g.
+// "therapy/kashaya-basti-therapy" is served by /therapy/[slug]/page.tsx, which looks up
+// `therapy/${slug}`. So preserve any "/" the source column already has (slugifying each
+// segment individually) instead of collapsing it — only a full absolute URL gets reduced
+// down to its path, since that's the whole page URL rather than an intentional slug value.
+const normalizeSlugInput = (value: string) => {
+  const trimmed = value.trim();
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const segments = new URL(trimmed).pathname.split('/').filter(Boolean);
+      return segments.map(slugify).join('/');
+    } catch {
+      // fall through to the relative-path handling below
+    }
+  }
+  return trimmed.split('/').filter(Boolean).map(slugify).join('/');
+};
+
+export interface BulkDiseaseTreatmentRow {
+  title?: string;
+  slug?: string;
+  short_description?: string;
+  content?: string;
+  image?: string;
+  meta_title?: string;
+  meta_des?: string;
+}
+
+export interface BulkTreatmentImportResult {
+  success: boolean;
+  created: number;
+  skipped: number;
+  errors: { row: number; reason: string }[];
+}
+
+/**
+ * Admin Server Action to bulk-import "Treatment Pages" sub-pages from a parsed CSV/Excel file.
+ * The client parses the file and maps its columns to these field names before calling this
+ * action, so each row here already matches the BulkDiseaseTreatmentRow shape.
+ *
+ * Unlike locations (many-to-many with diseases), every treatment sub-page belongs to exactly
+ * one disease (`disease_id` is a single FK), so the whole batch is linked to one `diseaseId`
+ * chosen once in the admin UI — matching the single "Parent Disease" dropdown on the manual
+ * create/edit form.
+ */
+export async function bulkImportDiseaseTreatmentsAction(
+  rows: BulkDiseaseTreatmentRow[],
+  rowOffset: number = 0,
+  diseaseId: number
+): Promise<BulkTreatmentImportResult> {
+  const isAuth = await checkAuth();
+  if (!isAuth) {
+    return { success: false, created: 0, skipped: 0, errors: [{ row: 0, reason: 'Unauthorized' }] };
+  }
+
+  if (!diseaseId) {
+    return { success: false, created: 0, skipped: 0, errors: [{ row: 0, reason: 'A parent disease must be selected.' }] };
+  }
+
+  let created = 0;
+  let skipped = 0;
+  const errors: { row: number; reason: string }[] = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const rowNum = rowOffset + i + 2; // +1 for header row, +1 for 1-indexing — matches the row number the admin sees in their spreadsheet
+
+    try {
+      const title = (row.title || '').trim();
+
+      if (!title) {
+        skipped++;
+        errors.push({ row: rowNum, reason: 'Missing Title — row skipped.' });
+        continue;
+      }
+
+      const slug = (row.slug && row.slug.trim() && normalizeSlugInput(row.slug)) || slugify(title);
+
+      const existingTreatment = await query('SELECT id FROM disease_treatments WHERE slug = ? LIMIT 1', [slug]);
+      if (existingTreatment.length > 0) {
+        skipped++;
+        errors.push({ row: rowNum, reason: `Slug "${slug}" already exists as a treatment page — row skipped.` });
+        continue;
+      }
+
+      const existingDisease = await query('SELECT id FROM diseases WHERE slug = ? LIMIT 1', [slug]);
+      if (existingDisease.length > 0) {
+        skipped++;
+        errors.push({ row: rowNum, reason: `Slug "${slug}" is already used by a disease page — row skipped.` });
+        continue;
+      }
+
+      await query(
+        `INSERT INTO disease_treatments (disease_id, title, slug, image, short_description, content, meta_title, meta_des, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+        [
+          diseaseId,
+          title,
+          slug,
+          (row.image || '').trim(),
+          (row.short_description || '').trim(),
+          (row.content || '').trim(),
+          (row.meta_title || '').trim() || `${title} | Ayurvedic Treatment`,
+          (row.meta_des || '').trim()
+        ]
+      );
+
+      created++;
+    } catch (error) {
+      console.error(`Bulk treatment page import failed on row ${rowNum}:`, error);
+      skipped++;
+      errors.push({ row: rowNum, reason: 'Unexpected error while saving this row.' });
+    }
+  }
+
+  revalidatePath('/all-diseases');
+  revalidatePath('/admin/treatment-pages');
+  revalidatePath('/admin/dashboard');
+
+  return { success: true, created, skipped, errors };
+}

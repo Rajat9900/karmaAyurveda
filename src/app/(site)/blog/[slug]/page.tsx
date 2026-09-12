@@ -6,14 +6,18 @@ import { Calendar, User, Tag as TagIcon } from 'lucide-react';
 import PageBanner from '@/components/ui/PageBanner';
 import BlogSidebar from '@/components/blog/BlogSidebar';
 import WebStoriesSlider from '@/components/blog/WebStoriesSlider';
-import { getBlogsAction, getBlogBySlugAction } from '@/app/actions/blogActions';
+import ScriptInjector from '@/components/blog/ScriptInjector';
+import { getPublicBlogsAction, getBlogBySlugAction } from '@/app/actions/blogActions';
 import { getBlogCategoriesAction } from '@/app/actions/blogCategoryActions';
 import { getBlogTagsAction } from '@/app/actions/blogTagActions';
 import { getPublicWebStoriesAction } from '@/app/actions/webStoryActions';
+import { stripHtml } from '@/lib/stripHtml';
+
+export const dynamic = 'force-dynamic';
 
 // Generate static params for all known blog posts to prerender them
 export async function generateStaticParams() {
-  const posts = await getBlogsAction();
+  const posts = await getPublicBlogsAction();
   return posts.map((post) => ({
     slug: post.slug,
   }));
@@ -22,22 +26,26 @@ export async function generateStaticParams() {
 // Generate dynamic metadata for SEO
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
-  const post = await getBlogBySlugAction(resolvedParams.slug);
-  
+  // Route params arrive percent-encoded (e.g. Unicode slugs), unlike the old Pages Router's
+  // auto-decoded context.params — decode before using it as a lookup key or display text.
+  const slug = decodeURIComponent(resolvedParams.slug);
+  const post = await getBlogBySlugAction(slug);
+
   if (!post) {
     return { title: 'Post Not Found' };
   }
 
   return {
     title: post.meta_title || `${post.title} | Karma Ayurveda Blog`,
-    description: post.meta_des || post.excerpt,
+    description: post.meta_des || stripHtml(post.excerpt),
     keywords: post.meta_keywords || `${post.category.toLowerCase()}, ayurveda, health`
   };
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
-  const post = await getBlogBySlugAction(resolvedParams.slug);
+  const slug = decodeURIComponent(resolvedParams.slug);
+  const post = await getBlogBySlugAction(slug);
 
   // If the slug doesn't match any post, return a 404 page
   if (!post) {
@@ -45,16 +53,25 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   }
 
   const [allPosts, categories, tags, webStories] = await Promise.all([
-    getBlogsAction(),
+    getPublicBlogsAction(),
     getBlogCategoriesAction(),
     getBlogTagsAction(),
     getPublicWebStoriesAction()
   ]);
   const recentPosts = allPosts.filter(p => p.slug !== post.slug).slice(0, 3);
 
+  // The sidebar shows only the latest 15 categories/tags rather than the full lists, which
+  // have grown too long for a sidebar widget.
+  const sidebarCategories = [...categories].sort((a, b) => b.id - a.id).slice(0, 15);
+  const sidebarTags = [...tags].sort((a, b) => b.id - a.id).slice(0, 15);
+
   return (
     <main className="flex flex-col min-h-screen bg-white">
-      
+
+      {/* Admin-authored custom head/footer scripts for this post */}
+      <ScriptInjector html={post.head_script} target="head" />
+      <ScriptInjector html={post.footer_script} target="body" />
+
       {/* Hero Banner (Abstracted) */}
       <PageBanner 
         title={<span className="line-clamp-2 md:px-12">{post.title}</span>}
@@ -74,14 +91,19 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <div className="lg:col-span-8">
               {/* Article Header & Meta */}
               <div className="mb-10 text-center lg:text-left">
-                {post.category_slug ? (
-                  <Link
-                    href={`/category/${post.category_slug}`}
-                    className="inline-block py-1 px-3 rounded-full bg-green-50 text-[#1f4229] text-xs font-bold tracking-wider uppercase mb-4 shadow-sm border border-green-100 hover:bg-green-100 transition-colors"
-                  >
-                    {post.category}
-                  </Link>
-                ) : (
+                {post.categories && post.categories.length > 0 ? (
+                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 mb-4">
+                    {post.categories.map((cat) => (
+                      <Link
+                        key={cat.slug}
+                        href={`/category/${cat.slug}`}
+                        className="inline-block py-1 px-3 rounded-full bg-green-50 text-[#1f4229] text-xs font-bold tracking-wider uppercase shadow-sm border border-green-100 hover:bg-green-100 transition-colors"
+                      >
+                        {cat.name}
+                      </Link>
+                    ))}
+                  </div>
+                ) : post.category && (
                   <span className="inline-block py-1 px-3 rounded-full bg-green-50 text-[#1f4229] text-xs font-bold tracking-wider uppercase mb-4 shadow-sm border border-green-100">
                     {post.category}
                   </span>
@@ -153,7 +175,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
             {/* Right: Sidebar */}
             <div className="lg:col-span-4">
-              <BlogSidebar recentPosts={recentPosts} categories={categories} tags={tags} />
+              <BlogSidebar recentPosts={recentPosts} categories={sidebarCategories} tags={sidebarTags} />
             </div>
 
           </div>

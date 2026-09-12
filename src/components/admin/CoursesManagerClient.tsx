@@ -35,6 +35,11 @@ export default function CoursesManagerClient({ initialCourses }: CoursesManagerC
   const [titleInput, setTitleInput] = useState('');
   const [linkInput, setLinkInput] = useState('');
   const [imageInput, setImageInput] = useState('');
+  const [descriptionInput, setDescriptionInput] = useState('');
+  const [priceInput, setPriceInput] = useState('');
+  const [eligibilityInput, setEligibilityInput] = useState('');
+  const [modeInput, setModeInput] = useState('');
+  const [durationInput, setDurationInput] = useState('');
   const [sortInput, setSortInput] = useState<string>('0');
 
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +64,11 @@ export default function CoursesManagerClient({ initialCourses }: CoursesManagerC
       title: titleInput.trim(),
       link: linkInput.trim(),
       image: imageInput.trim(),
+      description: descriptionInput.trim(),
+      price: priceInput.trim(),
+      eligibility: eligibilityInput.trim(),
+      mode: modeInput.trim(),
+      duration: durationInput.trim(),
       sort: parseInt(sortInput) || 0
     };
 
@@ -113,6 +123,11 @@ export default function CoursesManagerClient({ initialCourses }: CoursesManagerC
     setTitleInput('');
     setLinkInput('');
     setImageInput('');
+    setDescriptionInput('');
+    setPriceInput('');
+    setEligibilityInput('');
+    setModeInput('');
+    setDurationInput('');
     setSortInput('0');
   };
 
@@ -126,6 +141,11 @@ export default function CoursesManagerClient({ initialCourses }: CoursesManagerC
     setTitleInput(course.title);
     setLinkInput(course.link);
     setImageInput(course.image);
+    setDescriptionInput(course.description || '');
+    setPriceInput(course.price || '');
+    setEligibilityInput(course.eligibility || '');
+    setModeInput(course.mode || '');
+    setDurationInput(course.duration || '');
     setSortInput(course.sort.toString());
   };
 
@@ -393,6 +413,62 @@ export default function CoursesManagerClient({ initialCourses }: CoursesManagerC
                   </div>
                 </div>
               )}
+
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Description</label>
+                <textarea
+                  rows={2}
+                  placeholder="e.g. Master your Prakriti for a healthy life. Learn Panchamaha Bhoota, Tridosha, Agni, and more."
+                  value={descriptionInput}
+                  onChange={(e) => setDescriptionInput(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-xs bg-white font-semibold text-slate-800 resize-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Price</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Rs.5,000/- (GST Included)"
+                  value={priceInput}
+                  onChange={(e) => setPriceInput(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-xs bg-white font-semibold text-slate-800"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Eligibility</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 12th Pass"
+                  value={eligibilityInput}
+                  onChange={(e) => setEligibilityInput(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-xs bg-white font-semibold text-slate-800"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Mode</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Offline"
+                    value={modeInput}
+                    onChange={(e) => setModeInput(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-xs bg-white font-semibold text-slate-800"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Duration</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 7 Days"
+                    value={durationInput}
+                    onChange={(e) => setDurationInput(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-xs bg-white font-semibold text-slate-800"
+                  />
+                </div>
+              </div>
 
               <div className="space-y-1">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Sorting Weight</label>

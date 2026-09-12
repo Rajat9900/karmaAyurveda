@@ -62,7 +62,7 @@ export default function ClinicsSection() {
           <p className="text-gray-500 text-sm mb-6">
             Discover all our treatment centers across India and choose the one closest to you
           </p>
-          <a href="/locations" className="inline-block bg-[#1f3747] text-white px-8 py-3 rounded-md font-semibold text-sm hover:bg-[#152733] transition-colors shadow-md">
+          <a href="/our-clinics" className="inline-block bg-[#1f3747] text-white px-8 py-3 rounded-md font-semibold text-sm hover:bg-[#152733] transition-colors shadow-md">
             Explore All Locations &rarr;
           </a>
           

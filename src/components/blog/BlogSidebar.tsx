@@ -109,11 +109,8 @@ export default function BlogSidebar({ recentPosts = [], categories = [], tags = 
           <ul className="space-y-2">
             {categories.map((cat) => (
               <li key={cat.id}>
-                <Link href={`/category/${cat.slug}`} className="flex justify-between items-center text-gray-600 hover:text-[#d2621a] transition-colors">
-                  <span>{cat.name}</span>
-                  <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-500">
-                    {cat.blog_count ?? 0}
-                  </span>
+                <Link href={`/category/${cat.slug}`} className="text-gray-600 hover:text-[#d2621a] transition-colors">
+                  {cat.name}
                 </Link>
               </li>
             ))}

@@ -25,6 +25,14 @@ export default function BlogFormClient({ editingBlog, categories, tagsList }: Bl
   const editorRef = useRef<HTMLDivElement>(null);
   const quillRef = useRef<any>(null);
 
+  // Convert a stored display date (e.g. "Jul 28, 2026") to the yyyy-mm-dd format
+  // needed by a native <input type="date">, falling back to today if unparseable.
+  const toDateInputValue = (displayDate?: string) => {
+    const parsed = displayDate ? new Date(displayDate) : new Date();
+    const d = isNaN(parsed.getTime()) ? new Date() : parsed;
+    return d.toISOString().slice(0, 10);
+  };
+
   const [formState, setFormState] = useState({
     title: editingBlog?.title || '',
     slug: editingBlog?.slug || '',
@@ -36,8 +44,13 @@ export default function BlogFormClient({ editingBlog, categories, tagsList }: Bl
     date: editingBlog?.date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     meta_title: editingBlog?.meta_title || '',
     meta_keywords: editingBlog?.meta_keywords || '',
-    meta_des: editingBlog?.meta_des || ''
+    meta_des: editingBlog?.meta_des || '',
+    head_script: editingBlog?.head_script || '',
+    footer_script: editingBlog?.footer_script || '',
+    status: editingBlog?.status || 'Active'
   });
+
+  const [dateInput, setDateInput] = useState(toDateInputValue(editingBlog?.date));
 
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>(editingBlog?.tagIds || []);
 
@@ -295,8 +308,8 @@ export default function BlogFormClient({ editingBlog, categories, tagsList }: Bl
             />
           </div>
 
-          {/* Grid Author & Category */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Grid Author, Category, Date, Status */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-1">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Author Name</label>
               <input
@@ -323,6 +336,36 @@ export default function BlogFormClient({ editingBlog, categories, tagsList }: Bl
                 ) : (
                   <option value="General">General</option>
                 )}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Blog Date</label>
+              <input
+                type="date"
+                value={dateInput}
+                onChange={(e) => {
+                  const isoValue = e.target.value;
+                  setDateInput(isoValue);
+                  const parsed = new Date(`${isoValue}T00:00:00`);
+                  if (!isNaN(parsed.getTime())) {
+                    setFormState(prev => ({
+                      ...prev,
+                      date: parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                    }));
+                  }
+                }}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-xs transition-all bg-white font-semibold text-slate-800"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</label>
+              <select
+                value={formState.status}
+                onChange={(e) => setFormState(prev => ({ ...prev, status: e.target.value }))}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-xs transition-all bg-white font-semibold text-slate-800"
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
               </select>
             </div>
           </div>
@@ -454,6 +497,35 @@ export default function BlogFormClient({ editingBlog, categories, tagsList }: Bl
                 value={formState.meta_des}
                 onChange={(e) => setFormState(prev => ({ ...prev, meta_des: e.target.value }))}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-xs bg-white font-semibold text-slate-800 resize-none"
+              />
+            </div>
+          </div>
+
+          <hr className="border-slate-100" />
+
+          {/* Custom Scripts */}
+          <div className="space-y-4">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Custom Scripts</span>
+
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Blog Head Script</label>
+              <textarea
+                rows={3}
+                placeholder="&lt;script&gt;...&lt;/script&gt; or other HTML injected near the top of this post's page"
+                value={formState.head_script}
+                onChange={(e) => setFormState(prev => ({ ...prev, head_script: e.target.value }))}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-xs bg-white font-mono text-slate-800 resize-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Blog Footer Script</label>
+              <textarea
+                rows={3}
+                placeholder="&lt;script&gt;...&lt;/script&gt; or other HTML injected near the bottom of this post's page"
+                value={formState.footer_script}
+                onChange={(e) => setFormState(prev => ({ ...prev, footer_script: e.target.value }))}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-xs bg-white font-mono text-slate-800 resize-none"
               />
             </div>
           </div>

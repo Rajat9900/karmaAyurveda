@@ -56,6 +56,14 @@ export async function setupDatabase() {
     `);
     console.log('Table "leads" checked/created.');
 
+    // Alter table leads to add an optional email column — used by forms like the course
+    // booking modal that collect an email address alongside name/phone.
+    const [leadsEmailColumn] = await connection.query(`SHOW COLUMNS FROM leads LIKE 'email'`) as any[];
+    if (leadsEmailColumn.length === 0) {
+      await connection.query(`ALTER TABLE leads ADD COLUMN email VARCHAR(255) NULL`);
+      console.log('Altered table "leads" to add email column.');
+    }
+
     // 5. Create blogs table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS blogs (
@@ -86,6 +94,39 @@ export async function setupDatabase() {
         ADD COLUMN meta_des TEXT NULL
       `);
       console.log('Altered table "blogs" to add meta columns.');
+    }
+
+    // Widen "category" and "meta_keywords" — bulk CSV imports can carry multi-category strings
+    // and long keyword lists that overflowed the original limits and silently failed to insert
+    // under strict SQL mode. Widen once; MODIFY COLUMN is a no-op cost-wise if already wide enough.
+    const [blogCategoryColumn] = await connection.query(`
+      SELECT CHARACTER_MAXIMUM_LENGTH AS len FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'blogs' AND column_name = 'category'
+    `) as any[];
+    if (blogCategoryColumn.length > 0 && blogCategoryColumn[0].len < 255) {
+      await connection.query(`ALTER TABLE blogs MODIFY COLUMN category VARCHAR(255) NOT NULL`);
+      console.log('Widened "blogs.category" to VARCHAR(255).');
+    }
+
+    const [blogMetaKeywordsColumn] = await connection.query(`
+      SELECT DATA_TYPE AS type FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'blogs' AND column_name = 'meta_keywords'
+    `) as any[];
+    if (blogMetaKeywordsColumn.length > 0 && blogMetaKeywordsColumn[0].type !== 'text') {
+      await connection.query(`ALTER TABLE blogs MODIFY COLUMN meta_keywords TEXT NULL`);
+      console.log('Widened "blogs.meta_keywords" to TEXT.');
+    }
+
+    // Alter table blogs to add head/footer script and status columns if they do not exist
+    const [blogScriptColumns] = await connection.query(`SHOW COLUMNS FROM blogs LIKE 'head_script'`) as any[];
+    if (blogScriptColumns.length === 0) {
+      await connection.query(`
+        ALTER TABLE blogs
+        ADD COLUMN head_script LONGTEXT NULL,
+        ADD COLUMN footer_script LONGTEXT NULL,
+        ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'Active'
+      `);
+      console.log('Altered table "blogs" to add head_script, footer_script, and status columns.');
     }
 
     // 5b. Create blog_categories table
@@ -877,6 +918,20 @@ export async function setupDatabase() {
     `);
     console.log('Table "location_diseases" checked/created.');
 
+    // 5hi. Create location_clinic_tags junction table — locations share the same tag pool as
+    // clinics (clinic_tags), since both live under "Clinic & Hospital Management" and often
+    // share tags like city or specialty, rather than maintaining a separate tag pool.
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS location_clinic_tags (
+        location_id INT NOT NULL,
+        clinic_tag_id INT NOT NULL,
+        PRIMARY KEY (location_id, clinic_tag_id),
+        FOREIGN KEY (location_id) REFERENCES service_locations(id) ON DELETE CASCADE,
+        FOREIGN KEY (clinic_tag_id) REFERENCES clinic_tags(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+    console.log('Table "location_clinic_tags" checked/created.');
+
     // 5i. Create doctors table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS doctors (
@@ -1630,6 +1685,17 @@ export async function setupDatabase() {
     `);
     console.log('Table "research_articles" checked/created.');
 
+    // Alter table research_articles to add short_title and research_details fields
+    const [researchShortTitleColumn] = await connection.query(`SHOW COLUMNS FROM research_articles LIKE 'short_title'`) as any[];
+    if (researchShortTitleColumn.length === 0) {
+      await connection.query(`
+        ALTER TABLE research_articles
+        ADD COLUMN short_title VARCHAR(255) NULL,
+        ADD COLUMN research_details TEXT NULL
+      `);
+      console.log('Altered table "research_articles" to add short_title/research_details columns.');
+    }
+
     // Create courses table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS courses (
@@ -1642,6 +1708,20 @@ export async function setupDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
     console.log('Table "courses" checked/created.');
+
+    // Alter table courses to add the descriptive card fields shown on the public Our Courses page
+    const [courseDescColumn] = await connection.query(`SHOW COLUMNS FROM courses LIKE 'description'`) as any[];
+    if (courseDescColumn.length === 0) {
+      await connection.query(`
+        ALTER TABLE courses
+        ADD COLUMN description TEXT NULL,
+        ADD COLUMN price VARCHAR(100) NULL,
+        ADD COLUMN eligibility VARCHAR(255) NULL,
+        ADD COLUMN mode VARCHAR(50) NULL,
+        ADD COLUMN duration VARCHAR(100) NULL
+      `);
+      console.log('Altered table "courses" to add description/price/eligibility/mode/duration columns.');
+    }
 
     // 5ak. Create pages table
     await connection.query(`

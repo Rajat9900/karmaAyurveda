@@ -7,6 +7,8 @@ import { checkAuth } from './authActions';
 export interface ResearchArticleItem {
   id: number;
   title: string;
+  short_title?: string;
+  research_details?: string;
   link: string;
   image: string;
   sort: number;
@@ -38,7 +40,7 @@ export async function createResearchArticleAction(articleData: Omit<ResearchArti
     return { success: false, error: 'Unauthorized' };
   }
 
-  const { title, link, image, sort } = articleData;
+  const { title, short_title, research_details, link, image, sort } = articleData;
 
   if (!title || !link || !image) {
     return { success: false, error: 'Title, Link, and Image are required fields.' };
@@ -46,9 +48,11 @@ export async function createResearchArticleAction(articleData: Omit<ResearchArti
 
   try {
     await query(
-      `INSERT INTO research_articles (title, link, image, sort) VALUES (?, ?, ?, ?)`,
+      `INSERT INTO research_articles (title, short_title, research_details, link, image, sort) VALUES (?, ?, ?, ?, ?, ?)`,
       [
         title,
+        short_title || '',
+        research_details || '',
         link,
         image,
         sort !== undefined && sort !== null ? Number(sort) : 0

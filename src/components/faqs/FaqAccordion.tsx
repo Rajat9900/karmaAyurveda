@@ -2,34 +2,11 @@
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 
-const faqsData = [
-  {
-    question: "What is the success rate of your Ayurvedic treatment for kidney diseases?",
-    answer: "Our Ayurvedic treatment has a very high success rate in halting disease progression and improving kidney function naturally. Over 1.5 lakh patients have experienced significant improvements, avoiding dialysis and transplants through our personalized, holistic approach."
-  },
-  {
-    question: "Do I need to stop dialysis immediately once I start the treatment?",
-    answer: "No, you should not stop dialysis immediately. Our treatment works gradually to rejuvenate the kidneys. As your kidney function improves (which will be reflected in your reports), we will advise you on slowly reducing the frequency of dialysis under close medical supervision."
-  },
-  {
-    question: "Are there any side effects of the Ayurvedic medicines?",
-    answer: "Karma Ayurveda uses 100% natural, herbal formulations that are rooted in ancient Vedic texts. When taken under the guidance of our experienced doctors, these medicines are completely safe and do not cause any harmful side effects."
-  },
-  {
-    question: "How long does it take to see results?",
-    answer: "The timeline for improvement varies depending on the severity of the condition, patient's age, and adherence to the prescribed diet and lifestyle changes. However, many patients start noticing positive changes in their symptoms and lab reports within 3 to 6 months."
-  },
-  {
-    question: "Is diet important during the treatment?",
-    answer: "Yes, diet plays a crucial role in Ayurvedic healing (Vihar). We provide a customized renal diet plan tailored to your specific condition. Strictly following this diet is essential for the medicines to work effectively and for the kidneys to heal."
-  },
-  {
-    question: "Can Ayurveda help if my creatinine levels are very high?",
-    answer: "Yes, Ayurveda focuses on treating the root cause of the disease. Through specific herbs (Shaman) and detox therapies (Shodhan), we aim to improve the filtration capacity of the kidneys, which naturally helps in lowering elevated creatinine and urea levels over time."
-  }
-];
+interface FaqAccordionProps {
+  faqs: { question: string; answer: string }[];
+}
 
-export default function FaqAccordion() {
+export default function FaqAccordion({ faqs }: FaqAccordionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(0); // First item open by default
 
   const toggleAccordion = (index: number) => {
@@ -52,7 +29,7 @@ export default function FaqAccordion() {
         </div>
 
         <div className="space-y-4">
-          {faqsData.map((faq, index) => {
+          {faqs.map((faq, index) => {
             const isOpen = openIndex === index;
             
             return (

@@ -2,7 +2,7 @@ import React from 'react';
 import { Metadata } from 'next';
 import PageBanner from '@/components/ui/PageBanner';
 import BlogCard from '@/components/blog/BlogCard';
-import { getBlogsAction } from '@/app/actions/blogActions';
+import { getPublicBlogsAction } from '@/app/actions/blogActions';
 
 export const metadata: Metadata = {
   title: 'Blogs & Articles | Karma Ayurveda',
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogsPage() {
-  const blogs = await getBlogsAction();
+  const blogs = await getPublicBlogsAction();
 
   return (
     <main className="flex flex-col min-h-screen">

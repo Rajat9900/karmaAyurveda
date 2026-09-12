@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import PageBanner from '@/components/ui/PageBanner';
 import BlogCard from '@/components/blog/BlogCard';
 import BlogSidebar from '@/components/blog/BlogSidebar';
-import { getBlogsAction, getBlogsByTagAction } from '@/app/actions/blogActions';
+import { getPublicBlogsAction, getBlogsByTagAction } from '@/app/actions/blogActions';
 import { getBlogCategoriesAction } from '@/app/actions/blogCategoryActions';
 import { getBlogTagBySlugAction, getBlogTagsAction } from '@/app/actions/blogTagActions';
 
@@ -13,7 +13,9 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const resolvedParams = await params;
+  // Route params arrive percent-encoded (e.g. Unicode slugs) — decode before using as a lookup key.
+  const slug = decodeURIComponent(resolvedParams.slug);
   const tag = await getBlogTagBySlugAction(slug);
 
   if (!tag) {
@@ -27,7 +29,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function BlogTagPage({ params }: PageProps) {
-  const { slug } = await params;
+  const resolvedParams = await params;
+  const slug = decodeURIComponent(resolvedParams.slug);
   const tag = await getBlogTagBySlugAction(slug);
 
   if (!tag) {
@@ -36,11 +39,16 @@ export default async function BlogTagPage({ params }: PageProps) {
 
   const [blogs, allPosts, categories, tags] = await Promise.all([
     getBlogsByTagAction(slug),
-    getBlogsAction(),
+    getPublicBlogsAction(),
     getBlogCategoriesAction(),
     getBlogTagsAction()
   ]);
   const recentPosts = allPosts.slice(0, 3);
+
+  // The sidebar shows only the latest 15 categories/tags rather than the full lists, which
+  // have grown too long for a sidebar widget.
+  const sidebarCategories = [...categories].sort((a, b) => b.id - a.id).slice(0, 15);
+  const sidebarTags = [...tags].sort((a, b) => b.id - a.id).slice(0, 15);
 
   return (
     <main className="flex flex-col min-h-screen">
@@ -78,7 +86,7 @@ export default async function BlogTagPage({ params }: PageProps) {
 
             {/* Right: Sidebar */}
             <div className="lg:col-span-4">
-              <BlogSidebar recentPosts={recentPosts} categories={categories} tags={tags} />
+              <BlogSidebar recentPosts={recentPosts} categories={sidebarCategories} tags={sidebarTags} />
             </div>
 
           </div>

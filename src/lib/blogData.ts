@@ -7,14 +7,18 @@ export interface BlogPost {
   author: string;
   date: string;
   image: string;
-  category: string;
-  category_slug?: string; // resolved via join against blog_categories.name, used for /category/{slug} links
+  category: string; // raw DB value — may hold several comma-separated category names in one string
+  category_slug?: string; // slug of the first entry in `categories`, kept for backward compatibility
+  categories?: { name: string; slug: string }[]; // `category` split into individual {name, slug} entries, resolved against blog_categories
   tags?: string[];
   tagIds?: number[];
   tag_slugs?: string[]; // parallel array to `tags`, used for /tag/{slug} links
   meta_title?: string;
   meta_keywords?: string;
   meta_des?: string;
+  head_script?: string; // custom HTML/script injected near the top of this post's page
+  footer_script?: string; // custom HTML/script injected near the bottom of this post's page
+  status?: string; // 'Active' | 'Inactive' — Inactive posts are hidden from the public site
 }
 
 export const blogPosts: BlogPost[] = [

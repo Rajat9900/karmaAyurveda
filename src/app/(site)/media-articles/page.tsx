@@ -40,7 +40,7 @@ export default async function MediaArticlesPage() {
                   rel="noopener noreferrer"
                   className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group"
                 >
-                  <div className="relative h-48 overflow-hidden">
+                  <div className="relative h-80 overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={article.image}
@@ -48,11 +48,8 @@ export default async function MediaArticlesPage() {
                       className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
-                  <div className="p-6 flex flex-col flex-grow">
-                    <h3 className="text-lg font-bold text-[#1a2e3b] mb-4 leading-snug line-clamp-3 flex-grow">
-                      {article.title}
-                    </h3>
-                    <span className="inline-flex items-center gap-2 text-[#1f4229] font-bold text-sm group-hover:text-[#d2621a] transition-colors mt-auto w-max">
+                  <div className="px-6 py-4 flex items-center justify-between">
+                    <span className="inline-flex items-center gap-2 text-[#1f4229] font-bold text-sm group-hover:text-[#d2621a] transition-colors">
                       Read Article
                       <ExternalLink size={15} className="transform group-hover:translate-x-0.5 transition-transform" />
                     </span>

@@ -9,7 +9,8 @@ import {
   Trash2, 
   Edit, 
   FolderOpen,
-  Image as ImageIcon
+  Image as ImageIcon,
+  UploadCloud
 } from 'lucide-react';
 import { deleteBlogAction } from '@/app/actions/blogActions';
 import { BlogPost } from '@/lib/blogData';
@@ -26,8 +27,8 @@ export default function BlogsManagerClient({ initialBlogs }: BlogsManagerClientP
 
   // Statistics
   const totalBlogs = blogs.length;
-  const publishedBlogs = blogs.length; // In this mock setup, all are published
-  const draftBlogs = 0;
+  const publishedBlogs = blogs.filter(b => b.status !== 'Inactive').length;
+  const draftBlogs = blogs.filter(b => b.status === 'Inactive').length;
   const scheduledBlogs = 0;
 
   // Delete blog post
@@ -51,10 +52,10 @@ export default function BlogsManagerClient({ initialBlogs }: BlogsManagerClientP
       blog.category.toLowerCase().includes(blogSearch.toLowerCase()) ||
       blog.author.toLowerCase().includes(blogSearch.toLowerCase());
 
-    const matchesStatus = 
-      blogStatusFilter === 'all' || 
-      (blogStatusFilter === 'published' && true) ||
-      (blogStatusFilter === 'drafts' && false) ||
+    const matchesStatus =
+      blogStatusFilter === 'all' ||
+      (blogStatusFilter === 'published' && blog.status !== 'Inactive') ||
+      (blogStatusFilter === 'inactive' && blog.status === 'Inactive') ||
       (blogStatusFilter === 'scheduled' && false);
 
     return matchesSearch && matchesStatus;
@@ -97,13 +98,22 @@ export default function BlogsManagerClient({ initialBlogs }: BlogsManagerClientP
           </div>
         </div>
 
-        <Link
-          href="/admin/blogs/add"
-          className="bg-[#059669] hover:bg-[#047857] text-white font-extrabold text-xs py-2.5 px-5 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/10 cursor-pointer transition-all hover:-translate-y-0.5"
-        >
-          <Plus className="w-4.5 h-4.5" />
-          Add New Blog
-        </Link>
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/admin/blogs/bulk-upload"
+            className="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 font-extrabold text-xs py-2.5 px-5 rounded-xl flex items-center justify-center gap-2 shadow-sm cursor-pointer transition-all hover:-translate-y-0.5"
+          >
+            <UploadCloud className="w-4.5 h-4.5" />
+            Bulk Upload
+          </Link>
+          <Link
+            href="/admin/blogs/add"
+            className="bg-[#059669] hover:bg-[#047857] text-white font-extrabold text-xs py-2.5 px-5 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/10 cursor-pointer transition-all hover:-translate-y-0.5"
+          >
+            <Plus className="w-4.5 h-4.5" />
+            Add New Blog
+          </Link>
+        </div>
       </div>
 
       {/* Statistics Grid */}
@@ -118,7 +128,7 @@ export default function BlogsManagerClient({ initialBlogs }: BlogsManagerClientP
         </div>
         <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.01)]">
           <span className="text-[32px] font-black text-orange-500 leading-none">{draftBlogs}</span>
-          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mt-2.5">Drafts</span>
+          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mt-2.5">Inactive</span>
         </div>
         <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.01)]">
           <span className="text-[32px] font-black text-blue-500 leading-none">{scheduledBlogs}</span>
@@ -151,15 +161,15 @@ export default function BlogsManagerClient({ initialBlogs }: BlogsManagerClientP
           >
             Published <span className="text-[10px] ml-0.5 opacity-80">{publishedBlogs}</span>
           </button>
-          <button 
-            onClick={() => setBlogStatusFilter('drafts')}
+          <button
+            onClick={() => setBlogStatusFilter('inactive')}
             className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-              blogStatusFilter === 'drafts'
+              blogStatusFilter === 'inactive'
                 ? 'bg-emerald-50 text-[#059669] border border-emerald-100'
                 : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
             }`}
           >
-            Drafts <span className="text-[10px] ml-0.5 opacity-80">{draftBlogs}</span>
+            Inactive <span className="text-[10px] ml-0.5 opacity-80">{draftBlogs}</span>
           </button>
           <button 
             onClick={() => setBlogStatusFilter('scheduled')}
@@ -239,10 +249,17 @@ export default function BlogsManagerClient({ initialBlogs }: BlogsManagerClientP
                     </td>
                     <td className="py-4 px-5 text-slate-500 font-semibold">{blog.date}</td>
                     <td className="py-4 px-5">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#03543f] text-[10px] font-black border border-emerald-100">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        Published
-                      </span>
+                      {blog.status === 'Inactive' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-black border border-slate-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                          Inactive
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#03543f] text-[10px] font-black border border-emerald-100">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                          Active
+                        </span>
+                      )}
                     </td>
                     <td className="py-4 px-5 text-right">
                       <div className="flex justify-end gap-1">

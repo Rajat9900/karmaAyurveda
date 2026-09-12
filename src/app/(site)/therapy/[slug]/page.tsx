@@ -11,7 +11,9 @@ interface PageProps {
 
 // Generate dynamic metadata for SEO from database
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const resolvedParams = await params;
+  // Route params arrive percent-encoded (e.g. Unicode slugs) — decode before using as a lookup key.
+  const slug = decodeURIComponent(resolvedParams.slug);
   const treatment = await getDiseaseTreatmentBySlugAction(`therapy/${slug}`);
 
   if (!treatment) {
@@ -25,7 +27,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function TherapyDetailPage({ params }: PageProps) {
-  const { slug } = await params;
+  const resolvedParams = await params;
+  const slug = decodeURIComponent(resolvedParams.slug);
   const treatment = await getDiseaseTreatmentBySlugAction(`therapy/${slug}`);
 
   if (!treatment) {

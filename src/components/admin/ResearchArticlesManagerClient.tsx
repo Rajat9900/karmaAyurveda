@@ -33,6 +33,8 @@ export default function ResearchArticlesManagerClient({ initialArticles }: Resea
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<number | string | null>(null);
   const [titleInput, setTitleInput] = useState('');
+  const [shortTitleInput, setShortTitleInput] = useState('');
+  const [researchDetailsInput, setResearchDetailsInput] = useState('');
   const [linkInput, setLinkInput] = useState('');
   const [imageInput, setImageInput] = useState('');
   const [sortInput, setSortInput] = useState<string>('0');
@@ -57,6 +59,8 @@ export default function ResearchArticlesManagerClient({ initialArticles }: Resea
 
     const payload = {
       title: titleInput.trim(),
+      short_title: shortTitleInput.trim(),
+      research_details: researchDetailsInput.trim(),
       link: linkInput.trim(),
       image: imageInput.trim(),
       sort: parseInt(sortInput) || 0
@@ -111,6 +115,8 @@ export default function ResearchArticlesManagerClient({ initialArticles }: Resea
 
   const resetForm = () => {
     setTitleInput('');
+    setShortTitleInput('');
+    setResearchDetailsInput('');
     setLinkInput('');
     setImageInput('');
     setSortInput('0');
@@ -124,6 +130,8 @@ export default function ResearchArticlesManagerClient({ initialArticles }: Resea
     setEditingId(article.id);
 
     setTitleInput(article.title);
+    setShortTitleInput(article.short_title || '');
+    setResearchDetailsInput(article.research_details || '');
     setLinkInput(article.link);
     setImageInput(article.image);
     setSortInput(article.sort.toString());
@@ -255,6 +263,9 @@ export default function ResearchArticlesManagerClient({ initialArticles }: Resea
                         {/* Column 2: Title */}
                         <td className="py-4 px-5">
                           <span className="font-extrabold text-slate-900 text-sm leading-snug block">{article.title}</span>
+                          {article.short_title && (
+                            <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">{article.short_title}</span>
+                          )}
                         </td>
 
                         {/* Column 3: Link */}
@@ -347,6 +358,28 @@ export default function ResearchArticlesManagerClient({ initialArticles }: Resea
                   placeholder="e.g. Efficacy of Ayurvedic Intervention in CKD Management..."
                   value={titleInput}
                   onChange={(e) => setTitleInput(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-xs bg-white font-semibold text-slate-800 resize-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Short Title</label>
+                <input
+                  type="text"
+                  placeholder="e.g. CKD Management Study"
+                  value={shortTitleInput}
+                  onChange={(e) => setShortTitleInput(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-xs bg-white font-semibold text-slate-800"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Research Details</label>
+                <textarea
+                  rows={3}
+                  placeholder="Abstract or summary of the research findings..."
+                  value={researchDetailsInput}
+                  onChange={(e) => setResearchDetailsInput(e.target.value)}
                   className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-xs bg-white font-semibold text-slate-800 resize-none"
                 />
               </div>

@@ -54,6 +54,7 @@ export default function LeadsManagerClient({ initialLeads }: LeadsManagerClientP
     const matchesSearch = 
       lead.name.toLowerCase().includes(leadSearch.toLowerCase()) ||
       lead.phone.includes(leadSearch) ||
+      (lead.email || '').toLowerCase().includes(leadSearch.toLowerCase()) ||
       lead.disease.toLowerCase().includes(leadSearch.toLowerCase()) ||
       lead.message.toLowerCase().includes(leadSearch.toLowerCase());
     
@@ -196,6 +197,9 @@ export default function LeadsManagerClient({ initialLeads }: LeadsManagerClientP
                       <div className="max-w-xs">
                         <h4 className="font-extrabold text-xs text-slate-900 leading-snug">{lead.name}</h4>
                         <span className="text-[10px] text-slate-400 font-mono font-medium block mt-0.5">{lead.phone}</span>
+                        {lead.email && (
+                          <span className="text-[10px] text-slate-400 font-mono font-medium block">{lead.email}</span>
+                        )}
                       </div>
                     </td>
                     <td className="py-4 px-5">

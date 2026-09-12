@@ -8,6 +8,7 @@ export interface Lead {
   id: number;
   name: string;
   phone: string;
+  email?: string;
   disease: string;
   message: string;
   status: 'Pending' | 'Contacted' | 'Closed';
@@ -20,6 +21,7 @@ export interface Lead {
 export async function submitLeadAction(formData: FormData) {
   const name = formData.get('name') as string;
   const phone = formData.get('phone') as string;
+  const email = (formData.get('email') as string) || '';
   const disease = (formData.get('disease') as string) || 'Other';
   const message = (formData.get('message') as string) || '';
 
@@ -29,8 +31,8 @@ export async function submitLeadAction(formData: FormData) {
 
   try {
     await query(
-      'INSERT INTO leads (name, phone, disease, message, status) VALUES (?, ?, ?, ?, ?)',
-      [name, phone, disease, message, 'Pending']
+      'INSERT INTO leads (name, phone, email, disease, message, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, phone, email, disease, message, 'Pending']
     );
 
     // Revalidate dashboard so the admin immediately sees the new lead if they are active
@@ -54,7 +56,7 @@ export async function getLeadsAction(): Promise<Lead[]> {
 
   try {
     const leads = await query<Lead[]>(
-      'SELECT id, name, phone, disease, message, status, DATE_FORMAT(created_at, "%Y-%m-%d %H:%i:%s") as created_at FROM leads ORDER BY id DESC'
+      'SELECT id, name, phone, email, disease, message, status, DATE_FORMAT(created_at, "%Y-%m-%d %H:%i:%s") as created_at FROM leads ORDER BY id DESC'
     );
     return leads;
   } catch (error) {

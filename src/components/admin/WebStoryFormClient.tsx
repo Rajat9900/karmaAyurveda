@@ -25,7 +25,7 @@ interface PanelEntry {
 }
 
 const slugify = (text: string) =>
-  text.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
+  text.toLowerCase().replace(/\//g, '-').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
 
 export default function WebStoryFormClient({ editingStory }: WebStoryFormClientProps) {
   const router = useRouter();

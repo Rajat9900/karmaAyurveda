@@ -72,7 +72,7 @@ const emptyCategory = (): CategoryForm => ({
 });
 
 const slugify = (text: string) =>
-  text.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
+  text.toLowerCase().replace(/\//g, '-').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
 
 export default function PillarsManagerClient({ initialPillars, diseases, pillarDiseaseLinks }: PillarsManagerClientProps) {
   const [pillars, setPillars] = useState<Pillar[]>(initialPillars);

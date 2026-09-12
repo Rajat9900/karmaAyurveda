@@ -191,6 +191,16 @@ export default function AdminSidebar() {
                 Other Locations We Serve
               </Link>
               <Link
+                href="/admin/locations-we-serve/bulk-upload"
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                  isActive('/admin/locations-we-serve/bulk-upload')
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'hover:text-white hover:bg-[#15203b]'
+                }`}
+              >
+                Bulk Upload Locations
+              </Link>
+              <Link
                 href="/admin/clinic-tags"
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                   isActive('/admin/clinic-tags')
@@ -267,6 +277,16 @@ export default function AdminSidebar() {
                 }`}
               >
                 Manage Blogs
+              </Link>
+              <Link
+                href="/admin/blogs/bulk-upload"
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                  isActive('/admin/blogs/bulk-upload')
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'hover:text-white hover:bg-[#15203b]'
+                }`}
+              >
+                Bulk Upload (CSV/Excel)
               </Link>
             </div>
           )}

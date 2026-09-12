@@ -9,6 +9,11 @@ export interface CourseItem {
   title: string;
   link: string;
   image: string;
+  description?: string;
+  price?: string;
+  eligibility?: string;
+  mode?: string;
+  duration?: string;
   sort: number;
   created_at?: string;
 }
@@ -38,7 +43,7 @@ export async function createCourseAction(courseData: Omit<CourseItem, 'id' | 'cr
     return { success: false, error: 'Unauthorized' };
   }
 
-  const { title, link, image, sort } = courseData;
+  const { title, link, image, description, price, eligibility, mode, duration, sort } = courseData;
 
   if (!title || !link || !image) {
     return { success: false, error: 'Title, Link, and Image are required fields.' };
@@ -46,11 +51,16 @@ export async function createCourseAction(courseData: Omit<CourseItem, 'id' | 'cr
 
   try {
     await query(
-      `INSERT INTO courses (title, link, image, sort) VALUES (?, ?, ?, ?)`,
+      `INSERT INTO courses (title, link, image, description, price, eligibility, mode, duration, sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title,
         link,
         image,
+        description || '',
+        price || '',
+        eligibility || '',
+        mode || '',
+        duration || '',
         sort !== undefined && sort !== null ? Number(sort) : 0
       ]
     );

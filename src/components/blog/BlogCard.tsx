@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Calendar, User, ArrowRight } from 'lucide-react';
 import { BlogPost } from '@/lib/blogData';
+import { stripHtml } from '@/lib/stripHtml';
 
 interface BlogCardProps {
   post: BlogPost;
@@ -21,14 +22,19 @@ export default function BlogCard({ post }: BlogCardProps) {
             className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
           />
         </Link>
-        {post.category_slug ? (
-          <Link
-            href={`/category/${post.category_slug}`}
-            className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-[#1f4229] uppercase tracking-wider shadow-sm hover:bg-white transition-colors"
-          >
-            {post.category}
-          </Link>
-        ) : (
+        {post.categories && post.categories.length > 0 ? (
+          <div className="absolute top-4 left-4 flex flex-wrap gap-1.5 max-w-[calc(100%-2rem)]">
+            {post.categories.map((cat) => (
+              <Link
+                key={cat.slug}
+                href={`/category/${cat.slug}`}
+                className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-[#1f4229] uppercase tracking-wider shadow-sm hover:bg-white transition-colors"
+              >
+                {cat.name}
+              </Link>
+            ))}
+          </div>
+        ) : post.category && (
           <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-[#1f4229] uppercase tracking-wider shadow-sm">
             {post.category}
           </div>
@@ -59,7 +65,7 @@ export default function BlogCard({ post }: BlogCardProps) {
 
         {/* Excerpt */}
         <p className="text-gray-600 text-sm leading-relaxed mb-6 line-clamp-3 flex-grow">
-          {post.excerpt}
+          {stripHtml(post.excerpt)}
         </p>
 
         {/* Read More Link */}

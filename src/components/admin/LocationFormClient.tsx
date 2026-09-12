@@ -13,23 +13,32 @@ import {
   ServiceLocation
 } from '@/app/actions/locationActions';
 import { Disease } from '@/app/actions/diseaseActions';
+import { ClinicTag } from '@/lib/clinicData';
 
 interface LocationFormClientProps {
   editingLocation?: ServiceLocation;
   diseases?: Disease[];
   linkedDiseaseIds?: number[];
+  allTags?: ClinicTag[];
 }
 
-export default function LocationFormClient({ editingLocation, diseases = [], linkedDiseaseIds = [] }: LocationFormClientProps) {
+export default function LocationFormClient({ editingLocation, diseases = [], linkedDiseaseIds = [], allTags = [] }: LocationFormClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const [selectedDiseaseIds, setSelectedDiseaseIds] = useState<number[]>(linkedDiseaseIds);
   const [diseaseSearch, setDiseaseSearch] = useState('');
+  const [selectedTags, setSelectedTags] = useState<number[]>(editingLocation?.tag_ids || []);
 
   const handleToggleDisease = (diseaseId: number) => {
     setSelectedDiseaseIds(prev =>
       prev.includes(diseaseId) ? prev.filter(id => id !== diseaseId) : [...prev, diseaseId]
+    );
+  };
+
+  const handleTagToggle = (tagId: number) => {
+    setSelectedTags(prev =>
+      prev.includes(tagId) ? prev.filter(id => id !== tagId) : [...prev, tagId]
     );
   };
 
@@ -179,7 +188,7 @@ export default function LocationFormClient({ editingLocation, diseases = [], lin
     try {
       if (editingLocation) {
         // Update Action
-        const result = await updateLocationAction(editingLocation.id, locationPayload);
+        const result = await updateLocationAction(editingLocation.id, locationPayload, selectedTags);
         if (result.success) {
           await setLocationDiseaseLinksAction(editingLocation.id, selectedDiseaseIds);
           startTransition(() => {
@@ -192,7 +201,7 @@ export default function LocationFormClient({ editingLocation, diseases = [], lin
         }
       } else {
         // Create Action
-        const result = await createLocationAction(locationPayload);
+        const result = await createLocationAction(locationPayload, selectedTags);
         if (result.success) {
           if (result.id) {
             await setLocationDiseaseLinksAction(result.id, selectedDiseaseIds);
@@ -362,6 +371,31 @@ export default function LocationFormClient({ editingLocation, diseases = [], lin
                 </div>
               </>
             )}
+          </div>
+
+          {/* Tag Multi-Select Checkbox Grid — shares the same tag pool as Our Clinics */}
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Assign Tags</label>
+            <div className="border border-slate-150 rounded-lg p-3 bg-slate-50/50 max-h-36 overflow-y-auto space-y-2">
+              {allTags.length === 0 ? (
+                <span className="text-[10px] text-slate-400 font-semibold italic">No tags created yet. Add some under Clinic Tags.</span>
+              ) : (
+                allTags.map(tag => (
+                  <label
+                    key={tag.id}
+                    className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 hover:text-sky-700 transition-colors select-none"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedTags.includes(tag.id)}
+                      onChange={() => handleTagToggle(tag.id)}
+                      className="w-3.5 h-3.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+                    />
+                    <span>{tag.name}</span>
+                  </label>
+                ))
+              )}
+            </div>
           </div>
 
           {/* Grid City, Phone, Email */}

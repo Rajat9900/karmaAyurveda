@@ -49,10 +49,22 @@ export default async function ResearchArticlesPage() {
                     />
                   </div>
                   <div className="p-6 flex flex-col flex-grow">
-                    <h3 className="text-lg font-bold text-[#1a2e3b] mb-4 leading-snug line-clamp-3 flex-grow">
-                      {article.title}
-                    </h3>
-                    <span className="inline-flex items-center gap-2 text-[#1f4229] font-bold text-sm group-hover:text-[#d2621a] transition-colors mt-auto w-max">
+                    <div className="flex-grow">
+                      <h3 className="text-sm font-bold text-[#1a2e3b] mb-1 leading-snug line-clamp-3">
+                        {article.title}
+                      </h3>
+                      {article.short_title && (
+                        <p className="text-xs font-semibold text-[#1f4229]/70 mb-2 leading-snug line-clamp-2">
+                          {article.short_title}
+                        </p>
+                      )}
+                      {article.research_details && (
+                        <p className="text-xs text-gray-500 leading-snug line-clamp-3">
+                          {article.research_details}
+                        </p>
+                      )}
+                    </div>
+                    <span className="inline-flex items-center gap-2 text-[#1f4229] font-bold text-sm group-hover:text-[#d2621a] transition-colors mt-4 w-max">
                       Read Article
                       <ExternalLink size={15} className="transform group-hover:translate-x-0.5 transition-transform" />
                     </span>

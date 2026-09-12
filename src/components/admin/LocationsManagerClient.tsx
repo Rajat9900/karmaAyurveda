@@ -11,20 +11,34 @@ import {
   FolderOpen,
   Image as ImageIcon,
   Phone,
-  Mail
+  Mail,
+  UploadCloud
 } from 'lucide-react';
 import { deleteLocationAction, ServiceLocation } from '@/app/actions/locationActions';
+import { Disease } from '@/app/actions/diseaseActions';
 
 interface LocationsManagerClientProps {
   initialLocations: ServiceLocation[];
+  diseases?: Disease[];
+  locationDiseaseLinks?: Record<number, number[]>;
 }
 
-export default function LocationsManagerClient({ initialLocations }: LocationsManagerClientProps) {
+// 'all' shows everything; 'our-clinics' shows locations with no disease linked at all;
+// a number is a disease id, showing only locations linked to that specific disease.
+type LocationTab = 'all' | 'our-clinics' | number;
+
+export default function LocationsManagerClient({ initialLocations, diseases = [], locationDiseaseLinks = {} }: LocationsManagerClientProps) {
   const [locations, setLocations] = useState<ServiceLocation[]>(initialLocations);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<LocationTab>('all');
 
   // Statistics
   const totalLocations = locations.length;
+
+  const getDiseaseIdsForLocation = (locationId: string | number) => locationDiseaseLinks[Number(locationId)] || [];
+
+  const ourClinicsCount = locations.filter(l => getDiseaseIdsForLocation(l.id).length === 0).length;
+  const countForDisease = (diseaseId: number) => locations.filter(l => getDiseaseIdsForLocation(l.id).includes(diseaseId)).length;
 
   const handleDeleteLocation = async (id: string) => {
     if (!confirm('Are you sure you want to delete this location?')) return;
@@ -39,8 +53,14 @@ export default function LocationsManagerClient({ initialLocations }: LocationsMa
     }
   };
 
-  // Filter locations
-  const filteredLocations = locations.filter(location => {
+  // Filter locations — first by the active disease tab, then by the search query
+  const tabFilteredLocations = locations.filter(location => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'our-clinics') return getDiseaseIdsForLocation(location.id).length === 0;
+    return getDiseaseIdsForLocation(location.id).includes(activeTab);
+  });
+
+  const filteredLocations = tabFilteredLocations.filter(location => {
     return (
       location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       location.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -72,13 +92,22 @@ export default function LocationsManagerClient({ initialLocations }: LocationsMa
           </div>
         </div>
 
-        <Link
-          href="/admin/locations-we-serve/add"
-          className="bg-[#059669] hover:bg-[#047857] text-white font-extrabold text-xs py-2.5 px-5 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/10 cursor-pointer transition-all hover:-translate-y-0.5"
-        >
-          <Plus className="w-4.5 h-4.5" />
-          Add New Location
-        </Link>
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/admin/locations-we-serve/bulk-upload"
+            className="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 font-extrabold text-xs py-2.5 px-5 rounded-xl flex items-center justify-center gap-2 shadow-sm cursor-pointer transition-all hover:-translate-y-0.5"
+          >
+            <UploadCloud className="w-4.5 h-4.5" />
+            Bulk Upload
+          </Link>
+          <Link
+            href="/admin/locations-we-serve/add"
+            className="bg-[#059669] hover:bg-[#047857] text-white font-extrabold text-xs py-2.5 px-5 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/10 cursor-pointer transition-all hover:-translate-y-0.5"
+          >
+            <Plus className="w-4.5 h-4.5" />
+            Add New Location
+          </Link>
+        </div>
       </div>
 
       {/* Statistics Cards */}
@@ -87,6 +116,45 @@ export default function LocationsManagerClient({ initialLocations }: LocationsMa
           <span className="text-[32px] font-black text-slate-900 leading-none">{totalLocations}</span>
           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mt-2.5">Total Locations</span>
         </div>
+      </div>
+
+      {/* Disease Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 -mb-1">
+        <button
+          onClick={() => setActiveTab('all')}
+          className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'all'
+              ? 'bg-slate-800 text-white shadow-sm'
+              : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'
+          }`}
+        >
+          All ({totalLocations})
+        </button>
+        {ourClinicsCount > 0 && (
+          <button
+            onClick={() => setActiveTab('our-clinics')}
+            className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'our-clinics'
+                ? 'bg-[#059669] text-white shadow-sm'
+                : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'
+            }`}
+          >
+            Our Clinics ({ourClinicsCount})
+          </button>
+        )}
+        {diseases.filter(disease => countForDisease(disease.id) > 0).map(disease => (
+          <button
+            key={disease.id}
+            onClick={() => setActiveTab(disease.id)}
+            className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === disease.id
+                ? 'bg-sky-600 text-white shadow-sm'
+                : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'
+            }`}
+          >
+            {disease.icon} {disease.name} ({countForDisease(disease.id)})
+          </button>
+        ))}
       </div>
 
       {/* Filter and Search Row */}
@@ -116,13 +184,14 @@ export default function LocationsManagerClient({ initialLocations }: LocationsMa
                 <th className="py-4 px-5">Location Name & City</th>
                 <th className="py-4 px-5">Contact Details</th>
                 <th className="py-4 px-5">Address</th>
+                <th className="py-4 px-5">Tags</th>
                 <th className="py-4 px-5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50 font-bold text-slate-600">
               {filteredLocations.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-400">
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
                     <FolderOpen className="w-8 h-8 mx-auto text-slate-300 mb-2" />
                     No locations found. Click "Add New Location" to create.
                   </td>
@@ -163,6 +232,19 @@ export default function LocationsManagerClient({ initialLocations }: LocationsMa
                     </td>
                     <td className="py-4 px-5 text-slate-500 font-semibold max-w-xs truncate" title={location.address}>
                       {location.address}
+                    </td>
+                    <td className="py-4 px-5">
+                      {location.tag_names && location.tag_names.length > 0 ? (
+                        <div className="flex flex-wrap gap-1 max-w-[160px]">
+                          {location.tag_names.map((tagName, idx) => (
+                            <span key={idx} className="inline-flex items-center bg-sky-50 text-sky-700 border border-sky-100 px-1.5 py-0.5 rounded text-[9px] font-black">
+                              {tagName}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-slate-300 italic font-medium">No tags</span>
+                      )}
                     </td>
                     <td className="py-4 px-5 text-right">
                       <div className="flex justify-end gap-1">

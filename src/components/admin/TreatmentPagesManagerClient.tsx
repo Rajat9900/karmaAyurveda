@@ -12,7 +12,8 @@ import {
   AlertCircle,
   CheckCircle2,
   ArrowRight,
-  Image as ImageIcon
+  Image as ImageIcon,
+  UploadCloud
 } from 'lucide-react';
 import {
   DiseaseTreatmentWithDisease,
@@ -28,11 +29,17 @@ interface TreatmentPagesManagerClientProps {
 }
 
 const slugify = (text: string) =>
-  text.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
+  text.toLowerCase().replace(/\//g, '-').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
+
+// 'all' shows every treatment page; a number filters to only that disease's treatment pages.
+type TreatmentTab = 'all' | number;
 
 export default function TreatmentPagesManagerClient({ initialTreatments, diseases }: TreatmentPagesManagerClientProps) {
   const [treatments, setTreatments] = useState<DiseaseTreatmentWithDisease[]>(initialTreatments);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<TreatmentTab>('all');
+
+  const countForDisease = (diseaseId: number) => treatments.filter(t => t.disease_id === diseaseId).length;
 
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<number | string | null>(null);
@@ -235,7 +242,9 @@ export default function TreatmentPagesManagerClient({ initialTreatments, disease
     }
   };
 
-  const filteredTreatments = treatments.filter(t =>
+  const tabFilteredTreatments = treatments.filter(t => activeTab === 'all' || t.disease_id === activeTab);
+
+  const filteredTreatments = tabFilteredTreatments.filter(t =>
     t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     t.slug.toLowerCase().includes(searchQuery.toLowerCase()) ||
     t.disease_name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -262,6 +271,41 @@ export default function TreatmentPagesManagerClient({ initialTreatments, disease
             <p className="text-xs font-semibold text-slate-400 mt-0.5">Manage the individual sub-pages linked from each disease's "Treatments We Offer" cards</p>
           </div>
         </div>
+
+        <Link
+          href="/admin/treatment-pages/bulk-upload"
+          className="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 font-extrabold text-xs py-2.5 px-5 rounded-xl flex items-center justify-center gap-2 shadow-sm cursor-pointer transition-all hover:-translate-y-0.5"
+        >
+          <UploadCloud className="w-4.5 h-4.5" />
+          Bulk Upload
+        </Link>
+      </div>
+
+      {/* Disease Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 -mb-1">
+        <button
+          onClick={() => setActiveTab('all')}
+          className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'all'
+              ? 'bg-slate-800 text-white shadow-sm'
+              : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'
+          }`}
+        >
+          All ({treatments.length})
+        </button>
+        {diseases.filter(disease => countForDisease(disease.id) > 0).map(disease => (
+          <button
+            key={disease.id}
+            onClick={() => setActiveTab(disease.id)}
+            className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === disease.id
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'
+            }`}
+          >
+            {disease.icon} {disease.name} ({countForDisease(disease.id)})
+          </button>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
