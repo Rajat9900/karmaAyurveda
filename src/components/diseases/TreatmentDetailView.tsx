@@ -12,6 +12,10 @@ interface TreatmentDetailViewProps {
 // in the admin panel (title, image, rich-text body) differs per page.
 export default function TreatmentDetailView({ treatment }: TreatmentDetailViewProps) {
   const hasContent = treatment.content && treatment.content !== '<p><br></p>';
+  // Kidney treatment pages fall back to a stock disease image rather than hiding the hero
+  // image entirely when the admin hasn't uploaded one yet.
+  const fallbackImage = treatment.disease_name === 'Kidney' ? '/images/Polycystic-Kidney-Disease.jpg' : null;
+  const displayImage = treatment.image || fallbackImage;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -63,11 +67,11 @@ export default function TreatmentDetailView({ treatment }: TreatmentDetailViewPr
               </div>
             </div>
 
-            {treatment.image && (
+            {displayImage && (
               <div className="relative flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={treatment.image}
+                  src={displayImage}
                   alt={treatment.title}
                   className="h-[280px] md:h-[340px] w-full max-w-[480px] object-cover rounded-[26px] shadow-[0_25px_60px_rgba(23,48,33,0.18)] border-[6px] border-white"
                 />

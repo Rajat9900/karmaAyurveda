@@ -612,7 +612,13 @@ export default function DiseaseDetailClient({ disease, pillars, treatments, loca
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {data.treatments.map((item, idx) => (
+              {data.treatments.map((item, idx) => {
+                // Kidney treatment pages fall back to a stock disease image rather than the
+                // generic icon placeholder when the admin hasn't uploaded one yet.
+                const fallbackImage = disease.name === 'Kidney' ? '/images/Polycystic-Kidney-Disease.jpg' : null;
+                const displayImage = item.image || fallbackImage;
+
+                return (
                 <Link
                   key={idx}
                   href={`/${item.slug}`}
@@ -622,18 +628,18 @@ export default function DiseaseDetailClient({ disease, pillars, treatments, loca
                       so any image dimensions (small, large, portrait, landscape) sit cleanly without
                       stretching or awkward cropping. */}
                   <div className="relative h-44 overflow-hidden bg-gradient-to-br from-green-50 to-green-100 flex-shrink-0">
-                    {item.image ? (
+                    {displayImage ? (
                       <>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={item.image}
+                          src={displayImage}
                           alt=""
                           aria-hidden="true"
                           className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-50"
                         />
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={item.image}
+                          src={displayImage}
                           alt={item.title}
                           className="absolute inset-0 w-full h-full object-contain p-3 transition-transform duration-500 group-hover:scale-105"
                         />
@@ -661,7 +667,8 @@ export default function DiseaseDetailClient({ disease, pillars, treatments, loca
                     </div>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
